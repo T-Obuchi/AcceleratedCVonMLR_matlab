@@ -65,10 +65,24 @@ function [LOOE,ERR] = saacv_logit(w,X,Ycode)
 
 % Parameter
 [M,N]=size(X);
-X2=X.^2;
-mX2=mean(mean(X2));
+[M2 Np]=size(Ycode);
+[N2]=size(w);
+if nargin < 3
+    error('three input arguments needed');
+end
+if Np ~=2
+    error('the class number in third argument is inconsistent: two class case is treated');
+end
+if M ~= M2
+    error('data size is inconsistent between the second and third arguments');
+end
+if N ~= N2
+    error('feature dimensionality is inconsistent between the first and second arguments');
+end
 
 % Preparation 
+X2=X.^2;
+mX2=mean(mean(X2));
 u_all=X*w;
 p_all=prob_logit(u_all);      % All-class probabilities for all data
 F_all=p_all(:,1).*p_all(:,2); % Hessian 

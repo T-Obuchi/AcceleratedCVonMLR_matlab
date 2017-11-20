@@ -68,11 +68,28 @@ function [LOOE,ERR] = saacv_mlr(wV,X,Ycode,Np)
 
 % Parameter
 [M,N]=size(X);
+[M2 Np2]=size(Ycode);
+[N2 Np3]=size(wV);
+if nargin < 4
+    error('four input arguments needed');
+end
+if Np ~= Np2
+    error('the class number is inconsistent between the third and fourth arguments');
+end
+if Np ~= Np3
+    error('the class number is inconsistent between the first and fourth arguments');
+end
+if M ~= M2
+    error('data size is inconsistent between the second and third arguments');
+end
+if N ~= N2
+    error('feature dimensionality is inconsistent between the first and second arguments');
+end
 Nparam=N*Np;
-X2=X.^2;
-mX2=mean(mean(X2));
 
 % Preparation 
+X2=X.^2;
+mX2=mean(mean(X2));
 for ip=1:Np
     u_all(:,ip)=X*wV(:,ip);          % Overlaps for all data       
 end
