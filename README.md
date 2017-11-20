@@ -44,7 +44,7 @@ Outputs are the same as the multinomial case. The  further simplified approximat
 # DEMONSTRATION
 In the "demo" folder, demonstration codes for the multinomial and binomial logistic regressions, demo_LOOEapprox_mlr.m and demo_LOOEapprox_logit.m, respectively, are available.
 
-**Requirement**: glmnet (https://web.stanford.edu/~hastie/glmnet_matlab/) is required to obtain *wV* in these demonstration codes.
+**Requirement**: glmnet (https://web.stanford.edu/~hastie/glmnet_matlab/) is required to obtain the weigth vectors in these demonstration codes.
  
 # REFERENCE
 Tomoyuki Obuchi and Yoshiyuki Kabashima: "Accelerating Cross-Validation in Multinomial Logistic Regression with $ell_1$-Regularization", arXiv: 1711.05420
