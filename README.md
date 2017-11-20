@@ -28,7 +28,7 @@ If *acv_mlr* takes a long running time, please try a further simplified approxim
 ```matlab
 [LOOE,ERR] = saacv_mlr(wV,X,Ycode,Np)
 ```
-In our experiments, *acv_mlr* runs faster if *N* is several hundreds or less, but *saacv_mlr* is faster for larger *N*. For small data and model, these approximations are not necessarily fast, and for such cases we recommend to perform the literal cross-validation. For details, see REFERENCE.
+In our experiments, *acv_mlr* runs faster if *N* is several hundreds or less, but *saacv_mlr* is faster for larger *N*. For small data and model, these approximations are not necessarily fast, and hence we recommend to perform the literal cross-validation for such cases. For details, see REFERENCE.
 
 For binomial logistic regression (logit model), 
 ```matlab
