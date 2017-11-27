@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Demonstration of approximate cross-validation in 
-% Logistic regression with the l1 regularization. 
+% logistic regression with the l1 regularization. 
 % By Tomoyuki Obuchi, 2017 Nov. 1.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Method: 
@@ -34,7 +34,7 @@ r_exp=0.06;
 lambdaV=10.^(-r_exp*[-10:40]);
 
 % Options for glmnet
-path(path,'~/MyRecord/utility/glmnet_matlab');
+%path(path,'../glmnet_matlab');      % Please add your place of "glment" to path.
 options=glmnetSet();
 options.lambda=lambdaV*sqrt(N)/M;   % Setting lambda
 options.intr=0;                     % Zeroing intercept
@@ -81,10 +81,10 @@ t4=toc
 llkh=zeros(Llam,1);
 llkh_err=zeros(Llam,1);
 for ilam=1:Llam
-    u_all=X*wV(:,ilam);               % Effective field
+    u_all=X*wV(:,ilam);               % Overlap
     p_all=prob_logit(u_all);          % Probabilities for all classes and data
     llkh(ilam)=-mean(log(sum(Ycode.*p_all,2)));
-    llkh_err(ilam)=std(log(sum(Ycode.*p_all,2)))/sqrt(M-1);
+    llkh_err(ilam)=std(log(sum(Ycode.*p_all,2)))/sqrt(M);
 end
 
 figure; 

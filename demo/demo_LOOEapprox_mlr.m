@@ -45,9 +45,9 @@ r_exp=0.06;
 lambdaV=10.^(-r_exp*[0:100]);
 
 % Options for glmnet
-path(path,'~/MyRecord/utility/glmnet_matlab'); % Please add your place of "glment" to path.
+%path(path,'../glmnet_matlab');      % Please add your place of "glment" to path.
 options=glmnetSet();
-options.lambda=lambdaV*sqrt(N)/M;  % Setting lambda
+options.lambda=lambdaV*sqrt(N)/M;   % Setting lambda
 options.intr=0;                     % Zeroing intercept
 options.nfolds=10;                  % Fold number for CV
 options.thresh=1.0e-8;              % Threshold for convergence
@@ -96,12 +96,12 @@ llkh=zeros(Llam,1);
 llkh_err=zeros(Llam,1);
 for ilam=1:Llam
     for ip=1:Np
-        uV(:,ip)=X_std*wV(:,ip,ilam);           % Effective field
+        uV(:,ip)=X_std*wV(:,ip,ilam);           % Overlap
     end
     pV_all{ilam}=prob_multinomial(uV);          % Probabilities for all classes and data
     
     llkh(ilam)=-mean(log(sum(Ycode.*pV_all{ilam},2)));
-    llkh_err(ilam)=std(log(sum(Ycode.*pV_all{ilam},2)))/sqrt(M-1);
+    llkh_err(ilam)=std(log(sum(Ycode.*pV_all{ilam},2)))/sqrt(M);
 end
 
 figure; 
