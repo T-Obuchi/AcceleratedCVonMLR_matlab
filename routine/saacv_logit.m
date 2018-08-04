@@ -23,7 +23,7 @@ function [LOOE,ERR] = saacv_logit(w,X,Ycode,lambda2)
 %    Ycode       M*2 dimensional binary matrix representing
 %                the class to which the correponding feature vector belongs  
 %
-%    lambda2     Coefficient of the l2 regularizaiton term   
+%    lambda2     Coefficient of the l2 regularizaiton term. Default value is zero.
 %
 % OUTPUT ARGUMENTS:
 %    LOOE        Approximate value of the leave-one-out estimator 
