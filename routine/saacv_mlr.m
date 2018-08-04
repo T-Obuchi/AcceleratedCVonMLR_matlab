@@ -1,8 +1,8 @@
-function [LOOE,ERR] = saacv_mlr(wV,X,Ycode,Np)
+function [LOOE,ERR] = saacv_mlr(wV,X,Ycode,Np,lambda2)
 %--------------------------------------------------------------------------
 % saacv_mlr.m: A further simplified approximation of 
 % a leave-one-out estimator of predictive likelihood 
-% for multinomial logistic regression with l1 regularization
+% for multinomial logistic regression with elastic net regularization
 %--------------------------------------------------------------------------
 %
 % DESCRIPTION:
@@ -12,7 +12,7 @@ function [LOOE,ERR] = saacv_mlr(wV,X,Ycode,Np)
 %    penalized by l1 norm. 
 %
 % USAGE:
-%    [LOOE,ERR] = saacv_mlr(wV,X,Ycode,Np)
+%    [LOOE,ERR] = saacv_mlr(wV,X,Ycode,Np,lambda2)
 %
 % INPUT ARGUMENTS:
 %    wV          Weight vectors (N*Np dimensional vector). 
@@ -23,6 +23,8 @@ function [LOOE,ERR] = saacv_mlr(wV,X,Ycode,Np)
 %
 %    Ycode       M*Np dimensional binary matrix representing
 %                the class to which the correponding feature vector belongs  
+%
+%    lambda2     Coefficient of the l2 regularizaiton term   
 %
 % OUTPUT ARGUMENTS:
 %    LOOE        Approximate value of the leave-one-out estimator 
@@ -35,7 +37,8 @@ function [LOOE,ERR] = saacv_mlr(wV,X,Ycode,Np)
 %
 %                \hat{w}=argmin_{{w_a}_a^{Np}}
 %                        { -\sum_{\mu}llkh({w_a}_a^{Np}|(y_{\mu},x_{\mu}))
-%                                         + lambda*\sum_{a}^{Np}||w_a||_1 },
+%                                 + lambda*\sum_{a}^{Np}||w_a||_1 
+%                                 + (1/2)*lambda_2*\sum_{a}^{Np}||w_a||_2^2},
 %
 %    where llkh=log\phi is the log likelihood of multinomial logistic map
 %    \phi:
@@ -64,6 +67,7 @@ function [LOOE,ERR] = saacv_mlr(wV,X,Ycode,Np)
 %
 % DEVELOPMENT:
 %    28 Oct. 2017: Original version was written.
+%    27 Jul. 2018: Updated to include elastic net 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Parameter
@@ -84,6 +88,12 @@ if M ~= M2
 end
 if N ~= N2
     error('feature dimensionality is inconsistent between the first and second arguments');
+end
+if nargin < 4
+    error('four input arguments needed.');
+end
+if nargin < 5 || isempty(lambda2)
+    lambda2 = 0;
 end
 Nparam=N*Np;
 
@@ -108,7 +118,7 @@ end
 
 % SA approximation of LOO factor C
 % Initialization
-gamma=0.5;
+thre=10^(-6);
 ERR=100;
 I=eye(Np);
 C_SA=zeros(Np,Np);                   % Projected susceptibility
@@ -117,24 +127,36 @@ chi=zeros(Np,Np,N);                  % Susceptibility
 for i=1:N
     chi(A{i},A{i},i)=1/mX2;
 end
+
+gamma0=0.1;
+count=0;
+theta=1.0e-6;
 % Main loop computing C
-while ERR > 1.0e-6
+while ERR > theta
     chi_pre=chi;
+    gamma=min(0.9,gamma0+count*0.01);
 
     % Compute R
-    R=zeros(Np,Np);
+    R=lambda2*eye(Np);
     C_SA=mX2*sum(chi,3);
     for mu=1:M
         R=R+( I+F(:,:,mu)*C_SA )\F(:,:,mu);
-    end        
+    end
 
     % Update chi
-    for i=1:N
-        [V,D]=eig(R(A{i},A{i}));
-        DV=diag(D);
-        A_D=find(DV>10^(-8));
-        Rinv_zmr=V(:,A_D)*inv(D(A_D,A_D))*V(:,A_D)'; % Zero-mode-removed inverse of R
-        chi(A{i},A{i},i)=gamma*chi_pre(A{i},A{i},i)+(1-gamma)*Rinv_zmr/mX2;
+    if lambda2>thre
+        for i=1:N
+            Rinv_zmr=inv(R(A{i},A{i}));
+            chi(A{i},A{i},i)=gamma*chi_pre(A{i},A{i},i)+(1-gamma)*Rinv_zmr/mX2;
+        end
+    else        
+        for i=1:N
+            [V,D]=eig(R(A{i},A{i}));
+            DV=diag(D);
+            A_D=find(DV>thre);
+            Rinv_zmr=V(:,A_D)*inv(D(A_D,A_D))*V(:,A_D)'; % Zero-mode-removed inverse of R
+            chi(A{i},A{i},i)=gamma*chi_pre(A{i},A{i},i)+(1-gamma)*Rinv_zmr/mX2;
+        end
     end
 
     % Error of chi
@@ -143,6 +165,8 @@ while ERR > 1.0e-6
         ERR=ERR+norm(chi(A{i},A{i},i)-chi_pre(A{i},A{i},i),'fro');
     end
     ERR=ERR/N;
+    
+    count=count+1;
 end
     
 % Gradient

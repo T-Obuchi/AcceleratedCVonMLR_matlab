@@ -1,7 +1,7 @@
-function [LOOE,ERR] = acv_logit(w,X,Ycode)
+function [LOOE,ERR] = acv_logit(w,X,Ycode,lambda2)
 %--------------------------------------------------------------------------
 % acv_logit.m: An approximate leave-one-out estimator of predictive likelihood
-% for logistic regression with l1 regularization
+% for logistic regression with elastic net regularization
 %--------------------------------------------------------------------------
 %
 % DESCRIPTION:
@@ -10,7 +10,7 @@ function [LOOE,ERR] = acv_logit(w,X,Ycode)
 %    penalized by l1 norm. 
 %
 % USAGE:
-%    [LOOE,ERR] = acv_logit(w,X,Ycode)
+%    [LOOE,ERR] = acv_logit(w,X,Ycode,lambda2)
 %
 % INPUT ARGUMENTS:
 %    w           Weight vector (N dimensional vector). 
@@ -21,18 +21,20 @@ function [LOOE,ERR] = acv_logit(w,X,Ycode)
 %    Ycode       M*2 dimensional binary matrix representing
 %                the class to which the correponding feature vector belongs  
 %
+%    lambda2     Coefficient of the l2 regularizaiton term   
+%
 % OUTPUT ARGUMENTS:
 %    LOOE        Approximate value of the leave-one-out estimator 
 %
 %    ERR         Approximate standard error of the leave-one-out estimator 
 %
 % DETAILS:
-%    The following multinomial logistic regression penalized by the l1 norm 
-%    is considered:
+%    The following logistic regression penalized 
+%    by the elastic net regularization (l1 + l2 norm) is considered:
 %
 %                \hat{w}=argmin_{w}
 %                        { -\sum_{\mu}llkh(w|(y_{\mu},x_{\mu}))
-%                                         + lambda*||w||_1 },
+%                          + lambda*||w||_1 + (1/2)lambda2*||w||_2^2 },
 %
 %    where llkh=log\phi is the log likelihood of logit model:
 %
@@ -60,6 +62,7 @@ function [LOOE,ERR] = acv_logit(w,X,Ycode)
 %
 % DEVELOPMENT:
 %    1 Nov. 2017: Original version was written.
+%    27 Jul. 2018: Updated to include elastic net.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Parameter
@@ -78,6 +81,9 @@ end
 if N ~= N2
     error('feature dimensionality is inconsistent between the first and second arguments');
 end
+if nargin < 4 || isempty(lambda2)
+    lambda2 = 0;
+end
 
 % Preparation 
 u_all=X*w;
@@ -85,12 +91,12 @@ p_all=prob_logit(u_all);      % All-class probabilities for all data
 F_all=p_all(:,1).*p_all(:,2); % Hessian 
 
 % Active set 
-thre=1e-8;
+thre=1e-6;
 A=find(abs(w)>thre);          % Active set
 N_A=size(A,1);
 
 % Hessian
-G=X(:,A)'*diag(F_all)*X(:,A);
+G=X(:,A)'*diag(F_all)*X(:,A)+lambda2*eye(N_A);
 
 % LOO factor
 C=zeros(M,1);

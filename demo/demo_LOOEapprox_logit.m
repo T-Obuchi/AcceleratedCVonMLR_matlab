@@ -1,7 +1,9 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Demonstration of approximate cross-validation in 
-% logistic regression with the l1 regularization. 
-% By Tomoyuki Obuchi, 2017 Nov. 1.
+% Logistic regression with the elastic net regularization. 
+% By Tomoyuki Obuchi
+% Origial version was written on 2017 Oct. 26.
+% Updated on 2018 Jul. 26.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 % Method: 
 %   See arXiv:1711.05420
@@ -31,16 +33,19 @@ Ycode=[Y==0 Y==1];
 %%
 % lambda
 r_exp=0.06;
-lambdaV=10.^(-r_exp*[-10:40]);
+lambda1=100*10.^(-r_exp*[0:40]);
+alpha_glmnet=0.9;
+lambda_glmnet=lambda1/(M*alpha_glmnet);
+lambda2=lambda_glmnet*(1-alpha_glmnet)*M;
 
 % Options for glmnet
 %path(path,'../glmnet_matlab');      % Please add your place of "glment" to path.
 options=glmnetSet();
-options.lambda=lambdaV*sqrt(N)/M;   % Setting lambda
+options.lambda=lambda_glmnet;       % Setting lambda
+options.alpha=alpha_glmnet;         % Setting alpha
 options.intr=0;                     % Zeroing intercept
-options.nfolds=10;                  % Fold number for CV
 options.thresh=1.0e-8;              % Threshold for convergence
-options.maxit= 10^6;                % Max iteration
+options.maxit=10^7;                 % Max iteration
 
 % Binomial logit fit
 tic;
@@ -52,8 +57,9 @@ CVfit = cvglmnet(X,Y,'binomial', options);
 t2=toc
 
 %%
-lambdaV=fit.lambda;
-Llam=size(lambdaV,1);
+Llam=size(fit.lambda,1);
+lambda1_tmp=lambda1(1:Llam);
+lambda2_tmp=lambda2(1:Llam);
 wV=zeros(N,Llam);
 for ilam=1:Llam
     wV(:,ilam)=fit.beta(:,ilam);
@@ -64,7 +70,7 @@ LOOEV_err=zeros(Llam,1);
 tic; 
 for ilam=1:Llam
     % Approximate CV
-    [LOOEV(ilam),LOOEV_err(ilam)] = acv_logit(wV(:,ilam),X,Ycode);
+    [LOOEV(ilam),LOOEV_err(ilam)] = acv_logit(wV(:,ilam),X,Ycode,lambda2(ilam));
 end
 t3=toc
 
@@ -73,7 +79,7 @@ LOOEV_SA_err=zeros(Llam,1);
 tic; 
 for ilam=1:Llam
     % SA approximation
-    [LOOEV_SA(ilam),LOOEV_SA_err(ilam)] = saacv_logit(wV(:,ilam),X,Ycode);
+    [LOOEV_SA(ilam),LOOEV_SA_err(ilam)] = saacv_logit(wV(:,ilam),X,Ycode,lambda2(ilam));
 end
 t4=toc
 
@@ -81,7 +87,7 @@ t4=toc
 llkh=zeros(Llam,1);
 llkh_err=zeros(Llam,1);
 for ilam=1:Llam
-    u_all=X*wV(:,ilam);               % Overlap
+    u_all=X*wV(:,ilam);               % Effective field
     p_all=prob_logit(u_all);          % Probabilities for all classes and data
     llkh(ilam)=-mean(log(sum(Ycode.*p_all,2)));
     llkh_err(ilam)=std(log(sum(Ycode.*p_all,2)))/sqrt(M);
@@ -89,17 +95,18 @@ end
 
 figure; 
 hold on;
-errorbar(fit.lambda,LOOEV,LOOEV_err,'r+');
-errorbar(fit.lambda,LOOEV_SA,LOOEV_SA_err,'m>');
-errorbar(CVfit.lambda,CVfit.cvm/2,CVfit.cvsd/sqrt(2),'b*');
-errorbar(fit.lambda,llkh,llkh_err,'k<');
+errorbar(lambda1_tmp,LOOEV,LOOEV_err,'r+');
+errorbar(lambda1_tmp,LOOEV_SA,LOOEV_SA_err,'m>');
+errorbar(lambda1_tmp,CVfit.cvm/2,CVfit.cvsd/2,'b*');
+errorbar(lambda1_tmp,llkh,llkh_err,'k<');
 title(['Simulated data, binary, N=',num2str(N)]);
-xlabel('\lambda');
-ylabel('CV errors');
-xlim([0.9*min(fit.lambda) 1.1*max(fit.lambda)]);
+xlabel('\lambda_1');
+ylabel('Errors');
+xlim([0.9*min(lambda1_tmp) 1.1*max(lambda1_tmp)]);
 ylim([min(CVfit.cvm/2)/100,2]);
 legend('Approx.','SA Approx','10-fold','Training error','Location','Best');
 set(gca,'XScale','Log')
 set(gca,'YScale','Log')
+
 
 

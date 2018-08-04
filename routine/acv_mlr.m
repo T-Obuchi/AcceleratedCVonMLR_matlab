@@ -1,16 +1,16 @@
-function [LOOE,ERR] = acv_mlr(wV,X,Ycode,Np)
+function [LOOE,ERR] = acv_mlr(wV,X,Ycode,Np,lambda2)
 %--------------------------------------------------------------------------
 % acv_mlr.m: An approximate leave-one-out estimator of predictive likelihood
-% for multinomial logistic regression with l1 regularization
+% for multinomial logistic regression with elastic net regularization
 %--------------------------------------------------------------------------
 %
 % DESCRIPTION:
 %    Compute and return an approximate leave-one-out estimator (LOOE) and its
 %    standard error of predivtive likelihood for multinomial logistic regression 
-%    penalized by l1 norm. 
+%    penalized by elastic net regularization. 
 %
 % USAGE:
-%    [LOOE,ERR] = acv_mlr(wV,X,Ycode,Np)
+%    [LOOE,ERR] = acv_mlr(wV,X,Ycode,Np,lambda2)
 %
 % INPUT ARGUMENTS:
 %    wV          Weight vectors (N*Np dimensional vector). 
@@ -22,18 +22,21 @@ function [LOOE,ERR] = acv_mlr(wV,X,Ycode,Np)
 %    Ycode       M*Np dimensional binary matrix representing
 %                the class to which the correponding feature vector belongs  
 %
+%    lambda2     Coefficient of the l2 regularizaiton term   
+%
 % OUTPUT ARGUMENTS:
 %    LOOE        Approximate value of the leave-one-out estimator 
 %
 %    ERR         Approximate standard error of the leave-one-out estimator 
 %
 % DETAILS:
-%    The following multinomial logistic regression penalized by the l1 norm 
-%    is considered:
+%    The following multinomial logistic regression penalized 
+%    by the l1 + l2 norms (elastic net) is considered:
 %
 %                \hat{w}=argmin_{{w_a}_a^{Np}}
 %                        { -\sum_{\mu}llkh({w_a}_a^{Np}|(y_{\mu},x_{\mu}))
-%                                         + lambda*\sum_{a}^{Np}||w_a||_1 },
+%                                 + lambda*\sum_{a}^{Np}||w_a||_1 
+%                                 + (1/2)*lambda_2*\sum_{a}^{Np}||w_a||_2^2},
 %
 %    where llkh=log\phi is the log likelihood of multinomial logistic map
 %    \phi:
@@ -62,6 +65,7 @@ function [LOOE,ERR] = acv_mlr(wV,X,Ycode,Np)
 %
 % DEVELOPMENT:
 %    27 Oct. 2017: Original version was written.
+%    27 Jul. 2018: Updated to include elastic net.
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
 % Parameter
@@ -82,6 +86,12 @@ if M ~= M2
 end
 if N ~= N2
     error('feature dimensionality is inconsistent between the first and second arguments');
+end
+if nargin < 4
+    error('four input arguments needed.');
+end
+if nargin < 5 || isempty(lambda2)
+    lambda2 = 0;
 end
 Nparam=N*Np;
 
@@ -121,12 +131,17 @@ for i=1:N_A
     end
 end
 G=H(A,A)+H(A,A)'+diag(H_diag(A));                     % Active part of Hessian 
+G=G+lambda2*eye(N_A);                                 % Contribution from l2 norm
 
 % Inverse Hessian with zero mode removal
-[V D]=eig(G);                                         % Eigenvalue decomposition
-thre=10^(-8);                                         % Threshold detecting zero modes
-A_rel=find(diag(D)>thre);                             % Relevant modes
-Ginv_zmr=V(:,A_rel)*inv(D(A_rel,A_rel))*V(:,A_rel)';  % Inverse without zero modes 
+thre=1.0e-6;                                              % Threshold detecting zero modes
+if lambda2 > thre
+    Ginv_zmr=inv(G);
+else
+    [V D]=eig(G);                                         % Eigenvalue decomposition
+    A_rel=find(diag(D)>thre);                             % Relevant modes
+    Ginv_zmr=V(:,A_rel)*inv(D(A_rel,A_rel))*V(:,A_rel)';  % Inverse without zero modes 
+end
 
 % LOO factor
 C=zeros(Np,Np,M);
