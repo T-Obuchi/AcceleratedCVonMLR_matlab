@@ -9,7 +9,7 @@ function [LOOE,ERR] = saacv_mlr(wV,X,Ycode,Np,lambda2)
 %    Compute and return an very simplified approximation of 
 %    a leave-one-out estimator (LOOE) and its standard error 
 %    of predivtive likelihood for multinomial logistic regression 
-%    penalized by l1 norm. 
+%    penalized by elastic net regularization (l1 norm and l2 norm). 
 %
 % USAGE:
 %    [LOOE,ERR] = saacv_mlr(wV,X,Ycode,Np,lambda2)

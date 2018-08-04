@@ -7,7 +7,7 @@ function [LOOE,ERR] = acv_mlr(wV,X,Ycode,Np,lambda2)
 % DESCRIPTION:
 %    Compute and return an approximate leave-one-out estimator (LOOE) and its
 %    standard error of predivtive likelihood for multinomial logistic regression 
-%    penalized by elastic net regularization. 
+%    penalized by elastic net regularization (l1 norm and l2 norm).
 %
 % USAGE:
 %    [LOOE,ERR] = acv_mlr(wV,X,Ycode,Np,lambda2)

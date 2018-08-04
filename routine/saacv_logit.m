@@ -8,7 +8,8 @@ function [LOOE,ERR] = saacv_logit(w,X,Ycode,lambda2)
 % DESCRIPTION:
 %    Compute and return an very simplified approximation of
 %    a leave-one-out estimator (LOOE) and its standard error 
-%    of predivtive likelihood for logistic regression penalized by l1 norm. 
+%    of predivtive likelihood for logistic regression 
+%    penalized by elastic net regularization (l1 norm and l2 norm).
 %
 % USAGE:
 %    [LOOE,ERR] = saacv_logit(w,X,Ycode,lambda2)

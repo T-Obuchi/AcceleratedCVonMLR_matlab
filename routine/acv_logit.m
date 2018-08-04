@@ -7,7 +7,7 @@ function [LOOE,ERR] = acv_logit(w,X,Ycode,lambda2)
 % DESCRIPTION:
 %    Compute and return an approximate leave-one-out estimator (LOOE) and 
 %    its standard error of predivtive likelihood for logistic regression 
-%    penalized by l1 norm. 
+%    penalized by elastic net regularization (l1 norm and l2 norm).
 %
 % USAGE:
 %    [LOOE,ERR] = acv_logit(w,X,Ycode,lambda2)
