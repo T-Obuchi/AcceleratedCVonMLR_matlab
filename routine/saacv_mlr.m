@@ -140,14 +140,14 @@ while ERR > theta
     R=lambda2*eye(Np);
     C_SA=mX2*sum(chi,3);
     for mu=1:M
-        R=R+( I+F(:,:,mu)*C_SA )\F(:,:,mu);
+        R=R+mX2*( I+F(:,:,mu)*C_SA )\F(:,:,mu);
     end
 
     % Update chi
     if lambda2>thre
         for i=1:N
             Rinv_zmr=inv(R(A{i},A{i}));
-            chi(A{i},A{i},i)=gamma*chi_pre(A{i},A{i},i)+(1-gamma)*Rinv_zmr/mX2;
+            chi(A{i},A{i},i)=gamma*chi_pre(A{i},A{i},i)+(1-gamma)*Rinv_zmr;
         end
     else        
         for i=1:N
@@ -155,7 +155,7 @@ while ERR > theta
             DV=diag(D);
             A_D=find(DV>thre);
             Rinv_zmr=V(:,A_D)*inv(D(A_D,A_D))*V(:,A_D)'; % Zero-mode-removed inverse of R
-            chi(A{i},A{i},i)=gamma*chi_pre(A{i},A{i},i)+(1-gamma)*Rinv_zmr/mX2;
+            chi(A{i},A{i},i)=gamma*chi_pre(A{i},A{i},i)+(1-gamma)*Rinv_zmr;
         end
     end
 

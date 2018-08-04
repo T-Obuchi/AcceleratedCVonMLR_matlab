@@ -109,8 +109,8 @@ theta=1.0e-6;
 while ERR > theta
     chi_pre=chi;
     C_SA=N_A*mX2*chi;
-    R=lambda2+sum(F_all./(1+F_all*C_SA));
-    chi=gamma*chi_pre+(1-gamma)/R/mX2;
+    R=lambda2+mX2*sum(F_all./(1+F_all*C_SA));
+    chi=gamma*chi_pre+(1-gamma)/R;
     ERR=norm(chi-chi_pre);
 end
 C_SA=N_A*mX2*chi;
