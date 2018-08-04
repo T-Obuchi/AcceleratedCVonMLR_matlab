@@ -33,12 +33,13 @@ In our experiments, *acv_mlr* runs faster if *N* is several hundreds or less, bu
 
 For binomial logistic regression (logit model),
 ```matlab
-[LOOE,ERR] = acv_logit(w,X,Ycode)
+[LOOE,ERR] = acv_logit(w,X,Ycode,lambda2)
 ```
 Inputs:
 - *w*: the estimated weight vector of *N* dimensional
 - *X*: the set of feature vectors  of *M* * *N* dimensional
 - *Ycode*: the *M* * *2* dimensional binary matrix representing the class to which the corresponding feature vector belongs
+- *lambda2*: the coefficient of the *L2* norm. If this argument is absent, *lambda2* is set to be the default value *lambda2=0*
 
 Outputs are the same as the multinomial case. The  further simplified approximation for the logit model is implemented in *saacv_logit*.
 
