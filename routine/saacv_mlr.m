@@ -140,7 +140,7 @@ while ERR > theta
     R=lambda2*eye(Np);
     C_SA=mX2*sum(chi,3);
     for mu=1:M
-        R=R+mX2*( I+F(:,:,mu)*C_SA )\F(:,:,mu);
+        R=R+mX2*( ( I+F(:,:,mu)*C_SA )\F(:,:,mu) );
     end
 
     % Update chi
